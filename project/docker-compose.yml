@@ -1,0 +1,58 @@
+version: "3"
+
+volumes:
+  app_media:
+  app_static:
+  postgres:
+
+services:
+  nginx:
+    container_name: nginx
+    restart: always
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    volumes:
+      - ./nginx/conf:/etc/nginx/config.d
+      - app_media:/data/app/media
+      - app_static:/data/app/static
+  postgres:
+    container_name: postgres
+    restart: always
+    image: postgres:9.6-alpine
+    volumes:
+      - postgres:/var/lib/postgressql/data
+      - ./postgres/initdb:/docker-entrypoint-initdb.d
+    expose:
+      - "5432"
+
+  app:
+    container_name: app
+    environment:
+    - PYTHONUNBUFFERED=1
+    restart: always
+    build: ./app/
+    expose:
+      - "8000"
+    depends_on:
+      - postgres
+    volumes:
+      - app_media:/app/media
+      - app_static:/app/static
+      - ./app/conf:/conf
+    entrypoint: ""
+    command: /usr/bin/uwsgi --module=app.wsgi:application --master --http=:8000 --processes=5 --maxr-request=5000
+
+  data:
+    container_name: data
+    restart: always
+    image: alpine:3.7
+    volumes:
+      - app_media:/data/app/media
+      - app_static:/data/app/static
+      - postgres:/data/postgres
+    command: tail -F /dev/null
+
+
