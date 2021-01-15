@@ -1,4 +1,4 @@
-# Prueba_tecnica
+# Prueba_tecnica_Número_2
 Esquema de configuración
 Contenedores:
 nginx: proporcionará el servicio web.
